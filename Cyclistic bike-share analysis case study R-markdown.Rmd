@@ -1,0 +1,510 @@
+---
+title: "Cyclistic bike-share analysis case study"
+author: "Ugochukwu Orji"
+date: "11/9/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# Data Analysis method: 
+
+**Ask -> Prepare -> Process -> Analyze -> Share -> Act**
+
+# 1. Ask 
+
+## Background
+
+*•*	Company: Cyclistic, a fictional bike-share company based in Chicago launched a successful bike-share offering. Since then, the program has grown to a fleet of 5,824 bicycles that 
+are geo-tracked and locked into a network of 692 stations across Chicago. The bikes can be unlocked from one station and returned to any other station in the system anytime. Until now, Cyclistic’s marketing strategy relied on building general awareness and appealing to broad consumer segments. One approach that helped make these things possible was the flexibility of its pricing plans: single-ride passes, full-day passes, and annual memberships. Customers who purchase single-ride or full-day passes are referred to as casual riders. Customers 
+who purchase annual memberships are Cyclistic members.
+
+*•*	My role: Junior data analyst working in the marketing analytics team
+
+*•*	Premise: Cyclistic’s finance analysts have concluded that annual members are much more profitable than casual riders. The director of marketing (who is also my manager) believes there is a very good chance to convert casual riders into members. She notes that casual riders are already aware of the Cyclistic program and have chosen Cyclistic for their mobility needs. The director of marketing wants to Design marketing strategies aimed at converting casual riders into annual members but to do this, the marketing analyst team needs to better understand how annual members and casual riders differ, why casual riders would buy a membership, and how digital media could affect their marketing tactics. So there’s need to analyze the Cyclistic historical bike trip data to identify trends
+
+## The Business Task: 
+My task is to analyze the Cyclistic historical bike trip data to identify trends that will help the marketing team to convert casual riders into members.
+
+## Key Stakeholders
+*•*	Primary stakeholder - the director of marketing (my manager)
+
+*•*	Secondary stakeholders - the marketing analytics team and the executive team
+
+
+
+# 3. Process
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Reading the packages into R
+
+```{r Reading the packages into R}
+
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(skimr)
+library(here)
+library(dplyr)
+library(modeest)
+library(DescTools)
+```
+
+## Setting file directory
+```{r Setting file directory}
+setwd("~/Google capstone/Capstone markdown") # Set working directory
+getwd() # displays your working directory
+```
+# STEP 1: COLLECT DATA
+
+## Data Source 
+Previous 12 months (from Oct, 2020 to Sept, 2021) of Cyclistic trip [data downloaded here.](https://divvy-tripdata.s3.amazonaws.com/index.html)
+
+## Important Notes
+*•*	Cyclistic is a fictional company thus the datasets name do not match
+
+*•*	The [dataset is licensed under this regulation](https://www.divvybikes.com/data-license-agreement) and has been publicly made available by Motivate International Inc.
+
+## Uploading Divvy datasets (csv files) here
+```{r uploading the datasets}
+
+Oct_2020_tripdata <- read_csv("Oct 2020.csv")
+Nov_2020_tripdata <- read_csv("Nov 2020.csv")
+Dec_2020_tripdata <- read_csv("Dec 2020.csv")
+Jan_2021_tripdata <- read_csv("Jan 2021.csv")
+Feb_2021_tripdata <- read_csv("Feb 2021.csv")
+Mar_2021_tripdata <- read_csv("Mar 2021.csv")
+Apr_2021_tripdata <- read_csv("Apr 2021.csv")
+May_2021_tripdata <- read_csv("May 2021.csv")
+Jun_2021_tripdata <- read_csv("Jun 2021.csv")
+Jul_2021_tripdata <- read_csv("Jul 2021.csv")
+Aug_2021_tripdata <- read_csv("Aug 2021.csv")
+Sept_2021_tripdata <- read_csv("Sept 2021.csv")
+```
+
+# 2. Prepare
+
+
+## The dataset follows the ROCCC Analysis as described below:
+
+*•*	Reliable - yes, not biased
+
+*•*	Original - yes, can locate the original public data
+
+*•*	Comprehensive - yes, not missing important information
+
+*•*	Current - yes, updated monthly
+
+*•*	Cited - yes
+
+# STEP 2: WRANGLE DATA AND COMBINE INTO A SINGLE FILE
+
+### Display each column name and check for consistency
+```{r Check column names, include=FALSE}
+colnames(Oct_2020_tripdata)
+colnames(Nov_2020_tripdata)
+colnames(Dec_2020_tripdata)
+colnames(Jan_2021_tripdata)
+colnames(Feb_2021_tripdata)
+colnames(Mar_2021_tripdata)
+```
+
+## Inspect the dataframes and look for inconsistencies
+```{r check for inconsistencies}
+str(Oct_2020_tripdata)
+str(Nov_2020_tripdata)
+str(Dec_2020_tripdata)
+str(Jan_2021_tripdata)
+str(Feb_2021_tripdata)
+str(Mar_2021_tripdata)
+str(Apr_2021_tripdata)
+str(May_2021_tripdata)
+str(Jun_2021_tripdata)
+str(Jul_2021_tripdata)
+str(Aug_2021_tripdata)
+str(Sept_2021_tripdata)
+```
+
+## Converting relevant so that they can stack correctly
+```{r Converting relevant so that they can stack correctly}
+
+Oct_2020_tripdata <-  mutate(Oct_2020_tripdata, start_station_id = as.character(start_station_id)
+                             ,end_station_id = as.character(end_station_id)
+                             ,started_at= as.POSIXct(started_at, format= "%m/%d/%Y %H:%M")
+                             ,ended_at= as.POSIXct(ended_at, format= "%m/%d/%Y %H:%M"))
+Nov_2020_tripdata <-  mutate(Nov_2020_tripdata, start_station_id = as.character(start_station_id)
+                             ,end_station_id = as.character(end_station_id)
+                             ,started_at= as.POSIXct(started_at, format= "%m/%d/%Y %H:%M")
+                             ,ended_at= as.POSIXct(ended_at, format= "%m/%d/%Y %H:%M"))
+Dec_2020_tripdata <-  mutate(Dec_2020_tripdata, start_station_id = as.character(start_station_id)
+                             ,end_station_id = as.character(end_station_id)
+                             ,started_at= as.POSIXct(started_at, format= "%m/%d/%Y %H:%M")
+                             ,ended_at= as.POSIXct(ended_at, format= "%m/%d/%Y %H:%M"))
+Jan_2021_tripdata <-  mutate(Jan_2021_tripdata, start_station_id = as.character(start_station_id)
+                             ,end_station_id = as.character(end_station_id)
+                             ,started_at= as.POSIXct(started_at, format= "%m/%d/%Y %H:%M")
+                             ,ended_at= as.POSIXct(ended_at, format= "%m/%d/%Y %H:%M"))
+Feb_2021_tripdata <-  mutate(Feb_2021_tripdata, start_station_id = as.character(start_station_id)
+                             ,end_station_id = as.character(end_station_id)
+                             ,started_at= as.POSIXct(started_at, format= "%m/%d/%Y %H:%M")
+                             ,ended_at= as.POSIXct(ended_at, format= "%m/%d/%Y %H:%M"))
+Mar_2021_tripdata <-  mutate(Mar_2021_tripdata, start_station_id = as.character(start_station_id)
+                             ,end_station_id = as.character(end_station_id)
+                             ,started_at= as.POSIXct(started_at, format= "%m/%d/%Y %H:%M")
+                             ,ended_at= as.POSIXct(ended_at, format= "%m/%d/%Y %H:%M"))
+Apr_2021_tripdata <-  mutate(Apr_2021_tripdata, start_station_id = as.character(start_station_id)
+                             ,end_station_id = as.character(end_station_id)
+                             ,started_at= as.POSIXct(started_at, format= "%m/%d/%Y %H:%M")
+                             ,ended_at= as.POSIXct(ended_at, format= "%m/%d/%Y %H:%M"))
+May_2021_tripdata <-  mutate(May_2021_tripdata, start_station_id = as.character(start_station_id)
+                             ,end_station_id = as.character(end_station_id)
+                             ,started_at= as.POSIXct(started_at, format= "%m/%d/%Y %H:%M")
+                             ,ended_at= as.POSIXct(ended_at, format= "%m/%d/%Y %H:%M"))
+Jun_2021_tripdata <-  mutate(Jun_2021_tripdata, start_station_id = as.character(start_station_id)
+                             ,end_station_id = as.character(end_station_id)
+                             ,started_at= as.POSIXct(started_at, format= "%m/%d/%Y %H:%M")
+                             ,ended_at= as.POSIXct(ended_at, format= "%m/%d/%Y %H:%M"))
+Jul_2021_tripdata <-  mutate(Jul_2021_tripdata, start_station_id = as.character(start_station_id)
+                             ,end_station_id = as.character(end_station_id)
+                             ,started_at= as.POSIXct(started_at, format= "%m/%d/%Y %H:%M")
+                             ,ended_at= as.POSIXct(ended_at, format= "%m/%d/%Y %H:%M"))
+Aug_2021_tripdata <-  mutate(Aug_2021_tripdata, start_station_id = as.character(start_station_id)
+                             ,end_station_id = as.character(end_station_id)
+                             ,started_at= as.POSIXct(started_at, format= "%m/%d/%Y %H:%M")
+                             ,ended_at= as.POSIXct(ended_at, format= "%m/%d/%Y %H:%M"))
+Sept_2021_tripdata <-  mutate(Sept_2021_tripdata, start_station_id = as.character(start_station_id)
+                             ,end_station_id = as.character(end_station_id)
+                             ,started_at= as.POSIXct(started_at, format= "%m/%d/%Y %H:%M")
+                             ,ended_at= as.POSIXct(ended_at, format= "%m/%d/%Y %H:%M"))
+```
+
+## Binding data frames into one big data frame
+```{r Binding data frames}
+
+all_trips <- bind_rows(Oct_2020_tripdata, Nov_2020_tripdata, Dec_2020_tripdata, 
+                       Jan_2021_tripdata, Feb_2021_tripdata, Mar_2021_tripdata,
+                       Apr_2021_tripdata, May_2021_tripdata, Jun_2021_tripdata,
+                       Jul_2021_tripdata, Aug_2021_tripdata, Sept_2021_tripdata)
+```
+
+## Remove lat, long
+```{r Remove lat, long}
+
+all_trips <- all_trips %>% 
+  select(-c(start_lat, start_lng, end_lat, end_lng))
+```
+
+# STEP 3: CLEAN UP AND ADD DATA TO PREPARE FOR ANALYSIS
+
+## Inspect the new table that has been created
+```{r Inspect the new table}
+colnames(all_trips)  #List of column names
+nrow(all_trips)  #How many rows are in data frame?
+dim(all_trips)  #Dimensions of the data frame?
+head(all_trips)  #See the first 6 rows of data frame.  Also tail(all_trips)
+str(all_trips)  #See list of columns and data types (numeric, character, etc)
+summary(all_trips)  #Statistical summary of data. Mainly for numerics
+```
+
+## Display some elements of the new table to see if everything is as expected
+```{r View table}
+glimpse(all_trips)
+```
+
+## Removing rows with missing values
+```{r Remove missing data}
+
+colSums(is.na(all_trips))
+all_trips_cleaned <- all_trips[complete.cases(all_trips), ]
+
+```
+
+## Flitering started_at data that is greater than ended_at
+```{r filter data mismatch}
+
+all_trips_cleaned <- all_trips_cleaned %>% 
+  filter(all_trips_cleaned$started_at < all_trips_cleaned$ended_at)
+```
+
+## New columns to list the date, month, day, and year of each ride
+```{r Add new columns for date, month, day and year}
+
+all_trips_cleaned$date <- as.Date(all_trips_cleaned$started_at, format= "%m/%d/%Y %H:%M")
+all_trips_cleaned$month <- format(as.Date(all_trips_cleaned$date), "%m")
+all_trips_cleaned$day <- format(as.Date(all_trips_cleaned$date), "%d")
+all_trips_cleaned$year <- format(as.Date(all_trips_cleaned$date), "%Y")
+all_trips_cleaned$day_of_week <- format(as.Date(all_trips_cleaned$date), "%A")
+```
+
+## Display some elements of the new table to see if everything is as expected
+```{r View the new table}
+
+glimpse(all_trips_cleaned)
+
+```
+
+## Add new column to calculate each ride length in mins
+```{r new column for ride length}
+all_trips_cleaned$ride_length <- difftime(all_trips_cleaned$ended_at, 
+                                                     all_trips_cleaned$started_at)
+```
+
+## Inspect the structure of the columns
+```{r inspect column structure}
+str(all_trips_cleaned)
+
+```
+
+## Convert "ride_length" from Factor to numeric so we can run calculations on the data
+```{r convert type from factor to numeric}
+is.factor(all_trips_cleaned$ride_length)
+all_trips_cleaned$ride_length <- as.numeric(as.character(all_trips_cleaned$ride_length))
+is.numeric(all_trips_cleaned$ride_length)
+
+```
+
+## Remove "bad" data and store in a new dataframe
+```{r Remove "bad" data}
+all_trips_v2 <- all_trips_cleaned[!(all_trips_cleaned$start_station_name == "HQ QR" | all_trips_cleaned$ride_length<0),]
+```
+
+# STEP 4: CONDUCT DESCRIPTIVE ANALYSIS
+
+## Descriptive analysis on ride_length (all figures in minutes)
+```{r Descriptive analysis on ride_length}
+
+mean(all_trips_v2$ride_length) #straight average (total ride length / rides)
+median(all_trips_v2$ride_length) #midpoint number in the ascending array of ride lengths
+max(all_trips_v2$ride_length) #longest ride
+min(all_trips_v2$ride_length) #shortest ride
+
+# You can condense the four lines above to one line using summary() on the specific attribute
+summary(all_trips_v2$ride_length)
+```
+
+## Compare members and casual users
+```{r Compare members and casual users}
+
+aggregate(all_trips_v2$ride_length ~ all_trips_v2$member_casual, FUN = mean)
+aggregate(all_trips_v2$ride_length ~ all_trips_v2$member_casual, FUN = median)
+aggregate(all_trips_v2$ride_length ~ all_trips_v2$member_casual, FUN = max)
+aggregate(all_trips_v2$ride_length ~ all_trips_v2$member_casual, FUN = min)
+```
+
+## See the average ride time by each day for members vs casual users
+```{r Average ride time for users}
+# Arranging the days of the week accordingly
+all_trips_v2$day_of_week <- ordered(all_trips_v2$day_of_week, levels=c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
+
+aggregate(all_trips_v2$ride_length ~ all_trips_v2$member_casual + all_trips_v2$day_of_week, FUN = mean)
+
+```
+
+## Analyze ridership data by type and weekday
+```{r ridership data analysis}
+all_trips_v2 %>% 
+  mutate(weekday = wday(started_at, label = TRUE)) %>%  #creates weekday field using wday()
+  group_by(member_casual, weekday) %>%  #groups by usertype and weekday
+  summarise(number_of_rides = n()                            #calculates the number of rides and average duration 
+            ,average_duration = mean(ride_length)) %>%         # calculates the average duration
+  arrange(member_casual, weekday)                                # sorts
+```
+
+## Visual for number of rides grouped by rider type
+```{r visual for nos of rides}
+all_trips_v2 %>% 
+  group_by(member_casual, day_of_week) %>% 
+  summarise(number_of_rides = n(), .groups = 'drop') %>% 
+  #arrange(member_casual, day_of_week) %>% 
+  ggplot(aes(x = day_of_week, y = number_of_rides, fill = member_casual)) +
+  geom_col(position = "dodge") + scale_y_continuous(labels = scales::comma) +
+  labs(x = "Day of Week", y = "Number of Rides", fill = "Member/Casual",
+       title = "Average Number of Rides by Day: Members vs. Casual Riders")
+
+```
+
+## Visual for average duration
+```{r visual for average duration}
+
+all_trips_v2 %>% 
+  group_by(member_casual, day_of_week) %>% 
+  summarise(average_duration = mean(ride_length), .groups = 'drop') %>% 
+  #arrange(member_casual, day_of_week) %>% 
+  ggplot(aes(x = day_of_week, y = average_duration, fill = member_casual)) +
+  geom_col(position = "dodge") +
+  labs(x = "Day of Week", y = "Average Duration (min)", 
+       fill = "Member/Casual",
+       title = "Average Riding Duration by Day: Members vs. Casual Riders")
+
+```
+
+## Average Number of Rides by Month
+```{r Average Number of Rides by Month}
+
+all_trips_v2 %>% 
+  group_by(month, member_casual) %>% 
+  summarize(number_of_rides = n(), .groups = 'drop') %>% 
+  filter(member_casual == 'casual') %>%
+  drop_na() %>%
+  ggplot(aes(x = month, y = number_of_rides, fill = member_casual)) + 
+  geom_bar(position = 'dodge', stat = 'identity') + scale_y_continuous(labels = scales::comma) +
+  theme(axis.text.x = element_text(angle = 45)) + 
+  labs(x = "Month", y = "Number of Rides", 
+       fill = "Member/Casual",
+       title = "Average Number of Rides by Month: Casual Riders")
+
+```
+
+# 4.1 MORE DESCRIPTIVE DATA ANALYSIS
+```{r MORE DESCRIPTIVE DATA ANALYSIS}
+# Combine start and end stations
+# Removing entries with no station name
+# Separate the data frame by rider type
+all_stations <- bind_rows(data.frame("stations" = all_trips_v2$start_station_name, 
+                                     "member_casual" = all_trips_v2$member_casual),
+                          data.frame("stations" = all_trips_v2$end_station_name,
+                                     "member_casual" = all_trips_v2$member_casual))
+all_stations_v2 <- all_stations[!(all_stations$stations == "" | is.na(all_stations$stations)),]
+all_stations_member <- all_stations_v2[all_stations_v2$member_casual == 'member',]
+all_stations_casual <- all_stations_v2[all_stations_v2$member_casual == 'casual',]
+
+# Get the top 10 popular stations all, members, and casual riders
+top_10_station <- all_stations_v2 %>% 
+  group_by(stations) %>% 
+  summarise(station_count = n()) %>% 
+  arrange(desc(station_count)) %>% 
+  slice(1:10)
+
+top_10_station_member <- all_stations_member %>% 
+  group_by(stations) %>% 
+  summarise(station_count = n()) %>% 
+  arrange(desc(station_count)) %>% 
+  head(n=10)
+
+top_10_station_casual <- all_stations_casual %>% 
+  group_by(stations) %>% 
+  summarise(station_count = n()) %>% 
+  arrange(desc(station_count)) %>% 
+  head(n=10)
+
+# Comparing general bike type preference between members and casual riders
+all_trips_v2 %>% 
+  group_by(rideable_type, member_casual) %>% 
+  summarize(number_of_rides = n(), .groups = 'drop')
+
+# average number of rides by hour (casual riders)
+all_trips_v2$started_at_hour <- as.POSIXct(all_trips_v2$started_at, "%Y-%m-%d %H:%M")      
+str(all_trips_v2)
+
+```
+
+## Visual for Top 10 Used Stations by Members
+```{r visual for Top 10 Used Stations by Members}
+
+ggplot(data = top_10_station_member) +
+  geom_col(aes(x = reorder(stations, station_count), y = station_count), fill = "thistle") +
+  labs(title = "Top 10 Used Stations by Members", y = "Number of Rides", x = "") +
+  scale_y_continuous(labels = scales::comma) +
+  coord_flip() +
+  theme_minimal()
+```
+
+## Visual for Top 10 Used Stations by Casual Members
+```{r visual for Top 10 Used Stations by Casual Members}
+ggplot(data = top_10_station_casual) +
+  geom_col(aes(x = reorder(stations, station_count), y = station_count), fill = "lightsalmon") +
+  labs(title = "Top 10 Used Stations by Casual Riders", x = "", y = "Number of Rides") + 
+  scale_y_continuous(labels = scales::comma) +
+  coord_flip() +
+  theme_minimal() 
+```
+
+## Visual for Average Number of Rides by Hour (Member riders)
+```{r Visual for Average Number of Rides by Hour for members}
+
+all_trips_v2 %>%
+  filter(member_casual == 'member') %>%
+  group_by(hour_of_day = hour(round_date(started_at_hour, 'hour'))) %>% 
+  group_by(hour_of_day, member_casual) %>% 
+  summarize(number_of_rides = n(), .groups = 'drop') %>% 
+  arrange(-number_of_rides) %>% 
+  ggplot(aes(x = hour_of_day, y = number_of_rides, fill = member_casual)) +
+  geom_bar(position = 'dodge', stat = 'identity') + scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(breaks = c(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23)) +
+  labs(x = "Time of the Day (h)", y = "Number of Rides", 
+       fill = "Member/Casual",
+       title = "Average Number of Rides by Hour: Member Riders") 
+```
+
+## Visual for average number of rides by hour (casual riders)
+```{r Visual for Average Number of Rides by Hour for casual}
+options(repr.plot.width = 12, repr.plot.height = 8)
+all_trips_v2 %>%
+  filter(member_casual == 'casual') %>%
+  group_by(hour_of_day = hour(round_date(started_at_hour, 'hour'))) %>% 
+  group_by(hour_of_day, member_casual) %>% 
+  summarize(number_of_rides = n(), .groups = 'drop') %>% 
+  arrange(-number_of_rides) %>% 
+  ggplot(aes(x = hour_of_day, y = number_of_rides, fill = member_casual)) +
+  geom_bar(position = 'dodge', stat = 'identity') + scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(breaks = c(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23)) +
+  labs(x = "Time of the Day (h)", y = "Number of Rides", 
+       fill = "Member/Casual",
+       title = "Average Number of Rides by Hour: Casual Riders") 
+
+```
+
+## Visual for usage of different bikes by rider type (separated)
+```{r visual for bike usage grouped by ride-type}
+options(repr.plot.width = 14, repr.plot.height = 10)
+all_trips_v2 %>% 
+  group_by(month, member_casual, rideable_type) %>% 
+  summarize(number_of_rides = n(), .groups = 'drop') %>% 
+  drop_na() %>% 
+  ggplot(aes(x = month, y = number_of_rides, fill = member_casual)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(labels = scales::comma) +
+  facet_grid(member_casual~rideable_type) +
+  labs(x = "Month", y = "Number of Rides", fill = "Member/Casual",
+       title = "Average Number of Rides by Month") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+
+# Key takeaways:
+
+*•*	The average ride duration is higher for casual riders for any day of the week.
+
+*•*	Both members and casual riders preferred docked bikes, while the classic bike is the least popular bike type. 
+
+*•*	Streeter Dr & Grand Ave, Lake Shore Dr & Monroe St, and Millennium Park are casual riders' top three start stations.
+
+*•*	Casual riders ride more during the weekends.
+
+# Recommendations 
+
+*•*	Giving incentives or rewards for achieving members' milestones to attract casual riders to become members.
+
+*•*	Offer occasional membership discount to new riders on summer and holiday weekends
+
+*•*	Partner with local businesses within the top used stations for casual riders targeting 1) local casual riders, 2) frequent visitors (commuters) to the businesses.
+
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
